@@ -14,12 +14,6 @@ function getVideo() {
 function detectPlatform() {
   if (window.location.hostname.includes("youtube.com")) {
     return "youtube";
-  } else if (window.location.hostname.includes("netflix.com")) {
-    return "netflix";
-  } else if (window.location.hostname.includes("vimeo.com")) {
-    return "vimeo";
-  } else {
-    return "unknown";
   }
 }
 
