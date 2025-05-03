@@ -3,11 +3,12 @@ let playbackRate = 1;
 let wasMuted = false;
 let video;
 let platform;
+let enabled = true; // Default to true
 
 // Function to get the main video element
 function getVideo() {
   const videoElements = document.querySelectorAll("video");
-  return videoElements.length > 0 ? videoElements[0] : null; // Only handle the first video
+  return videoElements.length > 0 ? videoElements[0] : null;
 }
 
 // Detect platform
@@ -21,46 +22,39 @@ function detectPlatform() {
 function observeVideoChanges() {
   const observer = new MutationObserver(() => {
     video = getVideo();
-    if (video && video.paused !== undefined) {
-      handleVisibilityChange(true); // Ensure visibility change logic is applied
-    }
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
 // Handle visibility change
-function handleVisibilityChange(enabled) {
-  document.addEventListener("visibilitychange", () => {
-    if (!enabled) return;
+document.addEventListener("visibilitychange", () => {
+  if (!enabled) return;
 
-    video = getVideo();
-    if (!video) return;
+  video = getVideo();
+  if (!video) return;
 
-    if (document.hidden) {
-      wasPlaying = !video.paused;
-      playbackRate = video.playbackRate;
-      wasMuted = video.muted;
-      if (wasPlaying) video.pause();
-    } else {
-      if (wasPlaying) {
-        video.play().then(() => {
-          video.playbackRate = playbackRate;
-          video.muted = wasMuted;
-        }).catch(err => {
-          console.error("Playback resume failed:", err);
-        });
-      }
+  if (document.hidden) {
+    wasPlaying = !video.paused;
+    playbackRate = video.playbackRate;
+    wasMuted = video.muted;
+    if (wasPlaying) video.pause();
+  } else {
+    if (wasPlaying) {
+      video.play().then(() => {
+        video.playbackRate = playbackRate;
+        video.muted = wasMuted;
+      }).catch(err => {
+        console.error("Playback resume failed:", err);
+      });
     }
-  });
-}
-
-// Auto-detect platform and handle visibility changes
-chrome.storage.sync.get(["enabled"], (result) => {
-  const enabled = result.enabled !== false;
-  platform = detectPlatform();
-  handleVisibilityChange(enabled);
-  observeVideoChanges(); // Ensure we observe video changes dynamically
+  }
 });
 
-console.log("Detected platform: ", platform);
+// Initialize
+chrome.storage.sync.get(["enabled"], (result) => {
+  enabled = result.enabled !== false;
+  platform = detectPlatform();
+  observeVideoChanges();
+  console.log("Detected platform: ", platform);
+});
